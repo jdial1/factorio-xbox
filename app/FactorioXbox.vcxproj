@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Factorio for Xbox Dev Mode: the xbox-pc-host loader packaged as its own app that starts Factorio.
+     The loader's sources are compiled from an xbox-pc-host checkout (HostRepo, default: a sibling folder
+     named xbox-pc-host); nothing of Factorio is part of this project or its package. -->
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <PropertyGroup Label="Globals">
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <ProjectGuid>{149B6D15-7D01-4ED1-AE7A-471B43AD812F}</ProjectGuid>
+    <ProjectName>FactorioXbox</ProjectName>
+    <RootNamespace>FactorioXbox</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.17763.0</WindowsTargetPlatformMinVersion>
+  </PropertyGroup>
+  <!-- Where the xbox-pc-host checkout is (override with /p:HostRepo=...). -->
+  <PropertyGroup>
+    <HostRepo Condition="'$(HostRepo)' == ''">$(MSBuildThisFileDirectory)..\..\xbox-pc-host\</HostRepo>
+    <HostRepo Condition="!HasTrailingSlash('$(HostRepo)')">$(HostRepo)\</HostRepo>
+    <HostSrc>$(HostRepo)XboxPcHost\src\</HostSrc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <!-- scripts\build.ps1 signs the package with a certificate whose subject matches the manifest's Publisher. -->
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <AdditionalIncludeDirectories>$(HostSrc);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- The shell starts Factorio by itself on every launch (xbox-pc-host's HOST_AUTOSTART_GAME). -->
+      <PreprocessorDefinitions>HOST_AUTOSTART_GAME=L"Factorio";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj /utf-8</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <AdditionalDependencies>d3d11.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;d2d1.lib;dwrite.lib;xaudio2.lib;ws2_32.lib;bcrypt.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- The loader: every source of the host app, from the xbox-pc-host checkout. -->
+  <ItemGroup>
+    <ClInclude Include="$(HostSrc)*.h" />
+    <ClInclude Include="$(HostSrc)loader\*.h" />
+    <ClCompile Include="$(HostSrc)*.cpp" Exclude="$(HostSrc)pch.cpp" />
+    <ClCompile Include="$(HostSrc)loader\*.cpp" />
+    <ClCompile Include="$(HostSrc)pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\LockScreenLogo.png" />
+    <Image Include="Assets\SplashScreen.png" />
+    <Image Include="Assets\Square150x150Logo.png" />
+    <Image Include="Assets\Square44x44Logo.png" />
+    <Image Include="Assets\StoreLogo.png" />
+    <Image Include="Assets\Wide310x150Logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <!-- TLS slots for game images with static TLS (the host's src\loader\Win32Tls.cpp), built by the host's
+       tools\tls-slot\build.ps1 and shipped at the package root under the names the loader looks for. -->
+  <PropertyGroup>
+    <TlsSlotDir>$(ProjectDir)$(IntDir)tls-slots\</TlsSlotDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(TlsSlotDir)XboxPcHostTls1.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls1.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls2.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls2.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls3.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls3.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls4.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls4.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls5.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls5.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls6.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls6.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls7.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls7.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls8.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls8.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls9.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls9.dll</Link></None>
+    <None Include="$(TlsSlotDir)XboxPcHostTls10.dll"><DeploymentContent>true</DeploymentContent><Link>XboxPcHostTls10.dll</Link></None>
+  </ItemGroup>
+  <Target Name="CheckHostRepo" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(HostSrc)App.cpp')" Text="xbox-pc-host not found at $(HostRepo): clone it there or build with /p:HostRepo=&lt;path&gt;." />
+  </Target>
+  <Target Name="BuildTlsSlots" BeforeTargets="PrepareForBuild" DependsOnTargets="CheckHostRepo" Inputs="$(HostRepo)tools\tls-slot\TlsSlot.cpp;$(HostRepo)tools\tls-slot\build.ps1" Outputs="$(TlsSlotDir)XboxPcHostTls10.dll">
+    <Exec Command="call &quot;$(VCInstallDir)Auxiliary\Build\vcvars64.bat&quot; &gt;nul &amp;&amp; powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(HostRepo)tools\tls-slot\build.ps1&quot; -Out &quot;$(TlsSlotDir.TrimEnd('\'))&quot;" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  </Target>
+</Project>

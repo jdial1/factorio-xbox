@@ -1,0 +1,23 @@
+# Factorio itself never goes in this repository: the prepared copy, saves and logs stay local.
+staging/
+logs/
+*.zip
+
+# Build output
+build/
+packages/
+app/x64/
+app/AppPackages/
+app/BundleArtifacts/
+app/Generated Files/
+x64/
+.vs/
+*.user
+*.pfx
+*.cer
+*.msix
+*.appx
+
+# Python
+__pycache__/
+*.pyc
