@@ -3,6 +3,40 @@
 Runs **your own copy** of Factorio (Windows x64, 2.0) on an Xbox Series X|S in Developer Mode, as its own
 app with controller support.
 
+## Proof of concept
+
+Captured on an **Xbox Series S** (Developer Mode, OS 26100.9647) on 2026-10-27 with Device Portal's
+screenshot API, while the launcher ran Factorio 2.0.77 from an unmodified `factorio.exe`. Factorio's own
+debug overlay is on (`show-fps` / `show-time-usage`), so the frame and tick timings in the shots are the
+game's live measurements.
+
+| Freeplay start, 59.9 FPS / 59.9 UPS | 10k SPM megabase (3.77M entities), 53.0 FPS / 53.0 UPS |
+|---|---|
+| ![Factorio freeplay on Xbox Series S](docs/screenshots/xbox-freeplay.png) | ![Factorio megabase on Xbox Series S](docs/screenshots/xbox-megabase.png) |
+
+The console's process list (Device Portal `/api/resourcemanager/processes`) while the megabase ran:
+
+```
+console: XBOX | OS 26100.9647.amd64fre.xb_flt_2610ge.261021-2200 | edition SystemOS
+FactorioXbox.exe  PID 4628  package FactorioXbox_0.1.0.0_x64__2wq9xwan7esye  working set 3.55 GB  running
+```
+
+Notes:
+
+- **Native, not streamed or emulated.** The game's x64 code runs on the console's own CPU inside the
+  launcher's app process. The xbox-pc-host loader maps the PE image and answers its Windows API calls;
+  Direct3D 11 goes to the console's GPU driver.
+- **Startup:** about 20 to 30 seconds to the main menu, then the save loads. Both shots were taken by
+  starting Factorio with `--load-game <save>` (set in the game folder's `host-args.txt`), with no controller.
+- **Freeplay:** a fresh freeplay map runs at the full 60 UPS; one update takes well under 1 ms.
+- **Megabase:** the "Modular 10k SPM" community map with trees, rocks, decoratives and unmined ore
+  removed so it fits the app's memory (about 3.5 GB in use of the roughly 5 GB a Series S app gets). Game
+  updates take 16 to 18 ms, so it runs at 53 to 56 UPS; a Ryzen 5600X PC takes 9.6 ms per tick on the same map.
+- **Settings** from [config/console-settings.ini](config/console-settings.ini): medium graphics, low video
+  memory, effects like smoke and decoratives off.
+
+## What's in this repository
+
 This repository contains no part of Factorio. It holds:
 
 | Part | What it is |
